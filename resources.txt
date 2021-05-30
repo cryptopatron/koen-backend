@@ -1,0 +1,4 @@
+https://github.com/Shpota/go-angular
+https://auth0.com/blog/developing-golang-and-angular-apps-part-1-backend-api/?utm_source=dev&utm_medium=sc&utm_campaign=stack_golang_angular
+https://www.thepolyglotdeveloper.com/2017/02/build-a-full-stack-movie-database-with-golang-angular-and-nosql/
+https://auth0.com/blog/authentication-in-golang/
