@@ -1,0 +1,7 @@
+version: "3.7"
+
+services:
+    go-server:
+        image: backend-dev
+        ports:
+            - 8008:8008
