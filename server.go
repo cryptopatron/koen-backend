@@ -27,7 +27,7 @@ func main() {
 	router.Get("/login", LoginHandler)
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
-	http.ListenAndServe(":8080", router)
+	http.ListenAndServe(":8008", router)
 
 }
 
