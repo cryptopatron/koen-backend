@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"os"
 
+	"bitbucket.org/cryptopatron/backend/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Logincurl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash"))
+	w.Write([]byte("changes test"))
 }
 
 func main() {
@@ -25,6 +26,7 @@ func main() {
 
 	// Setup REST API endpoints
 	router.Get("/login", LoginHandler)
+	router.Post("/auth/google/jwt", auth.GoogleAuthHandler)
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
 	http.ListenAndServe(":8008", router)

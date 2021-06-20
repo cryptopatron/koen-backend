@@ -1,6 +1,8 @@
 FROM golang:1.14.7-alpine AS GO_BUILD
+RUN apk add build-base
 COPY . /server
 WORKDIR /server
+RUN go test -v ./...
 RUN go build -o /go/bin/server
 
 
