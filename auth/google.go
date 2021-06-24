@@ -123,12 +123,13 @@ func GoogleAuthHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// create a JWT for OUR app and give it back to the client for future requests
+	// Stateful token authentication
 	// tokenString, err := auth.MakeJWT(claims.Email, cfg.JWTSecret)
 	// if err != nil {
 	// 	respondWithError(w, 500, "Couldn't make authentication token")
 	// 	return
 	// }
-
-	w.Write([]byte(claims.Email))
+	fmt.Println(claims.Email)
+	w.WriteHeader(http.StatusOK)
 
 }
