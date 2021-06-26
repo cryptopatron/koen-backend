@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"bitbucket.org/cryptopatron/backend/utils"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -85,51 +86,51 @@ func getGooglePublicKey(keyID string) (string, error) {
 	return key, nil
 }
 
-func respondWithError(w *http.ResponseWriter, errorCode int, errorMsg string) {
-	(*w).WriteHeader(errorCode)
-	(*w).Write([]byte(errorMsg))
-}
+func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 
-func GoogleAuthHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		respondWithError(&w, http.StatusBadRequest, "500 - Body is empty")
-		return
-	}
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	defer r.Body.Close()
-	// parse the GoogleJWT that was POSTed from the front-end
-	type GoogleJWT struct {
-		// Make sure field name starts with capital letter
-		// This makes sure its exported and visible to the JSON Decoder
-		IdToken string
-	}
-	decoder := json.NewDecoder(r.Body)
-	jwt := GoogleJWT{}
-	err := decoder.Decode(&jwt)
-	if err != nil {
-		respondWithError(&w, http.StatusBadRequest, "Couldn't decode parameters")
-		return
-	}
+		if r.Body == nil {
+			utils.Respond(http.StatusBadRequest, "Body is empty").ServeHTTP(w, r)
+			return
+		}
 
-	// Validate the JWT is valid
-	claims, err := ValidateGoogleJWT(jwt.IdToken)
-	if err != nil {
-		respondWithError(&w, http.StatusUnauthorized, "Invalid google auth")
-		return
-	}
-	// if claims.Email != user.Email {
-	// 	respondWithError(w, 403, "Emails don't match")
-	// 	return
-	// }
+		defer r.Body.Close()
+		// parse the GoogleJWT that was POSTed from the front-end
+		type GoogleJWT struct {
+			// Make sure field name starts with capital letter
+			// This makes sure its exported and visible to the JSON Decoder
+			IdToken string
+		}
+		decoder := json.NewDecoder(r.Body)
+		jwt := GoogleJWT{}
+		err := decoder.Decode(&jwt)
+		if err != nil {
+			utils.Respond(http.StatusBadRequest, "Couldn't decode JWT").ServeHTTP(w, r)
+			return
+		}
 
-	// create a JWT for OUR app and give it back to the client for future requests
-	// Stateful token authentication
-	// tokenString, err := auth.MakeJWT(claims.Email, cfg.JWTSecret)
-	// if err != nil {
-	// 	respondWithError(w, 500, "Couldn't make authentication token")
-	// 	return
-	// }
-	fmt.Println(claims.Email)
-	w.WriteHeader(http.StatusOK)
+		// Validate the JWT is valid
+		claims, err := ValidateGoogleJWT(jwt.IdToken)
+		if err != nil {
+			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)
+			return
+		}
+		// if claims.Email != user.Email {
+		// 	respondWithError(w, 403, "Emails don't match")
+		// 	return
+		// }
+
+		// create a JWT for OUR app and give it back to the client for future requests
+		// Stateful token authentication
+		// tokenString, err := auth.MakeJWT(claims.Email, cfg.JWTSecret)
+		// if err != nil {
+		// 	respondWithError(w, 500, "Couldn't make authentication token")
+		// 	return
+		// }
+		fmt.Println(claims.Email)
+		// Handler func to handle request if JWT is succesfully validated
+		h(w, r)
+	}
 
 }

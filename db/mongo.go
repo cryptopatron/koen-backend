@@ -1,31 +1,33 @@
-package main
+package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
+	"bitbucket.org/cryptopatron/backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-const DB_NAME = "koen"
-const COLLECTION_NAME = "users"
-
 type DBConn interface {
-	open()
-	close()
-	create()
+	Open()
+	Close()
+	Create(entry interface{}) (interface{}, error)
 }
 
 type MongoInstance struct {
-	client *mongo.Client
-	ctx context.Context
+	client     *mongo.Client
+	ctx        context.Context
+	Database   string
+	Collection string
 }
 
-func (m *MongoInstance) open() {
+func (m *MongoInstance) Open() {
 	// Connect to MongoDB Atlas cloud DB
 	uri := "mongodb+srv://koen:Rs19tpbHCpR7Lw7E@cluster0.znzdg.mongodb.net/koen?retryWrites=true&w=majority"
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -34,7 +36,7 @@ func (m *MongoInstance) open() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Ping the primary
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		panic(err)
@@ -46,37 +48,55 @@ func (m *MongoInstance) open() {
 
 }
 
-func (m *MongoInstance) close() {
+func (m *MongoInstance) Close() {
 	if err := m.client.Disconnect(m.ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (m *MongoInstance) create() {
-	collection := m.client.Database(DB_NAME).Collection(COLLECTION_NAME)
-	res, err := collection.InsertOne(m.ctx, bson.D{{"profileName", "test"}, {"value", 3.14159}})
+func (m *MongoInstance) Create(entry interface{}) (interface{}, error) {
+	doc, err := bson.Marshal(entry)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+	collection := m.client.Database(m.Database).Collection(m.Collection)
+	res, err := collection.InsertOne(m.ctx, doc)
+	if err != nil {
+		return nil, err
 	}
 	id := res.InsertedID
-	fmt.Println(id)
+	return id, err
 }
 
+func HandleCreateUser(db DBConn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-type User struct {
-	profileName string
-	walletAddr int64
-}
+		if r.Body == nil {
+			utils.Respond(http.StatusBadRequest, "Body is empty").ServeHTTP(w, r)
+			return
+		}
 
-// func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 
+		type User struct {
+			ProfileName    string `bson:"profileName"`
+			AutoWalletAddr int    `bson:"autoWalletAddr"`
+		}
 
-// }
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+		user := User{}
+		err := decoder.Decode(&user)
+		if err != nil {
+			utils.Respond(http.StatusBadRequest, "Couldn't decode JSON").ServeHTTP(w, r)
+			return
+		}
+		_, err = db.Create(user)
+		if err != nil {
+			utils.Respond(http.StatusInternalServerError, "Couldn't create new user!").ServeHTTP(w, r)
+			return
+		}
 
-func main() {
-	m := MongoInstance{}
-	m.open()
-	defer m.close()
-	m.create()
-	
+		utils.Respond(http.StatusOK, "")(w, r)
+	}
 }
