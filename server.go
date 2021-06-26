@@ -24,9 +24,13 @@ func main() {
 	// Setup file serving from web app
 	setupFileServer(router, *servePath)
 
+	// Connect to DB
+
+
 	// Setup REST API endpoints
 	router.Get("/login", LoginHandler)
 	router.Post("/auth/google/jwt", auth.GoogleAuthHandler)
+	router.Post("/user/create", db.CreateUserHandler)
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
 	http.ListenAndServe(":8008", router)
