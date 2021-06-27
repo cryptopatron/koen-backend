@@ -38,7 +38,7 @@ func TestCreateUserHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("Bad request with random request body", func(t *testing.T) {
+	t.Run("HTTP 400 on random JSON request body", func(t *testing.T) {
 		// Create a HTTP request with no JWT
 		body := bytes.NewBuffer([]byte("bleh"))
 		req, err := http.NewRequest("POST", "/user/create", body)
@@ -61,7 +61,7 @@ func TestCreateUserHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("DB entry fail on random fields", func(t *testing.T) {
+	t.Run("HTTP 400 on incorrectly matching JSON fields", func(t *testing.T) {
 		// Random fields which are dissimilar from the expected User creation fields
 		var json string = `{"bleh":"fakeasstoken", "hello": 65}`
 		body := strings.NewReader(json)
@@ -87,9 +87,15 @@ func TestCreateUserHandler(t *testing.T) {
 			t.Errorf("got %v, want %v", got, want)
 		}
 	})
-	t.Run("DB entry pass on corect fields", func(t *testing.T) {
+	t.Run("HTTP 200 on correctly matching JSON request", func(t *testing.T) {
 		// JSON which follow User key semantics in DB
-		var json string = `{"profileName":"fakeasstoken", "autoWalletAddr": 65}`
+		var json string = `{
+			"profileName":"fakeasstoken",
+			"userName":"fakeasstoken",
+			"email":"fakeasstoken",
+			"metaMaskWalletPublicKey":"fakeasstoken",    
+			"autoWalletPublicKey": "kuhgihjygyuh"
+			}`
 		body := strings.NewReader(json)
 		req, err := http.NewRequest("POST", "/user/create", body)
 		if err != nil {

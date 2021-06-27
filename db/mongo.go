@@ -79,8 +79,11 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 		defer r.Body.Close()
 
 		type User struct {
-			ProfileName    string `bson:"profileName"`
-			AutoWalletAddr int    `bson:"autoWalletAddr"`
+			Email                   string `bson:"email"` // Used for identifying Google users
+			UserName                string `bson:"userName"`
+			ProfileName             string `bson:"profileName"`
+			AutoWalletPublicKey     string `bson:"autoWalletPublicKey"`
+			MetaMaskWalletPublicKey string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
 		}
 
 		decoder := json.NewDecoder(r.Body)
