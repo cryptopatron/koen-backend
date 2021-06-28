@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -25,6 +24,13 @@ type MongoInstance struct {
 	ctx        context.Context
 	Database   string
 	Collection string
+}
+type User struct {
+	Email                   string `bson:"email"` // Used for identifying Google users
+	UserName                string `bson:"userName"`
+	ProfileName             string `bson:"profileName"`
+	AutoWalletPublicKey     string `bson:"autoWalletPublicKey"`
+	MetaMaskWalletPublicKey string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
 }
 
 func (m *MongoInstance) Open() {
@@ -70,30 +76,13 @@ func (m *MongoInstance) Create(entry interface{}) (interface{}, error) {
 
 func HandleCreateUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Body == nil {
-			utils.Respond(http.StatusBadRequest, "Body is empty").ServeHTTP(w, r)
-			return
-		}
-
-		defer r.Body.Close()
-
-		type User struct {
-			Email                   string `bson:"email"` // Used for identifying Google users
-			UserName                string `bson:"userName"`
-			ProfileName             string `bson:"profileName"`
-			AutoWalletPublicKey     string `bson:"autoWalletPublicKey"`
-			MetaMaskWalletPublicKey string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
-		}
-
-		decoder := json.NewDecoder(r.Body)
-		decoder.DisallowUnknownFields()
-		user := User{}
-		err := decoder.Decode(&user)
+		user := &User{}
+		err := utils.DecodeJSON(w, r, user)
 		if err != nil {
-			utils.Respond(http.StatusBadRequest, "Couldn't decode JSON").ServeHTTP(w, r)
+			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
 		}
+
 		_, err = db.Create(user)
 		if err != nil {
 			utils.Respond(http.StatusInternalServerError, "Couldn't create new user!").ServeHTTP(w, r)

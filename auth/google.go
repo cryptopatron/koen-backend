@@ -89,28 +89,20 @@ func getGooglePublicKey(keyID string) (string, error) {
 func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Body == nil {
-			utils.Respond(http.StatusBadRequest, "Body is empty").ServeHTTP(w, r)
-			return
-		}
-
-		defer r.Body.Close()
 		// parse the GoogleJWT that was POSTed from the front-end
 		type GoogleJWT struct {
 			// Make sure field name starts with capital letter
 			// This makes sure its exported and visible to the JSON Decoder
 			IdToken string
 		}
-		decoder := json.NewDecoder(r.Body)
-		jwt := GoogleJWT{}
-		err := decoder.Decode(&jwt)
+		jwt := &GoogleJWT{}
+		err := utils.DecodeJSON(w, r, jwt)
 		if err != nil {
-			utils.Respond(http.StatusBadRequest, "Couldn't decode JWT").ServeHTTP(w, r)
+			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
 		}
 
-		// Validate the JWT is valid
+		// Validate the JWT
 		claims, err := ValidateGoogleJWT(jwt.IdToken)
 		if err != nil {
 			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)
