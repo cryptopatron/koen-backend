@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -96,7 +97,7 @@ func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 			IdToken string
 		}
 		jwt := &GoogleJWT{}
-		err := utils.DecodeJSON(w, r, jwt)
+		err := utils.DecodeJSON(w, r, jwt, true)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
@@ -120,7 +121,13 @@ func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 		// 	respondWithError(w, 500, "Couldn't make authentication token")
 		// 	return
 		// }
-		fmt.Println(claims.Email)
+		userData, err := json.Marshal(claims)
+		if err != nil {
+			utils.Respond(http.StatusInternalServerError, "Could not encode JWT").ServeHTTP(w, r)
+			return
+		}
+		// Rewrite body to store user data
+		r.Body = ioutil.NopCloser(bytes.NewReader(userData))
 		// Handler func to handle request if JWT is succesfully validated
 		h(w, r)
 	}

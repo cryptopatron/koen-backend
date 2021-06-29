@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"bitbucket.org/cryptopatron/backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -37,21 +36,20 @@ type User struct {
 func (m *MongoInstance) Open() {
 	// Connect to MongoDB Atlas cloud DB
 	uri := "mongodb+srv://koen:Rs19tpbHCpR7Lw7E@cluster0.znzdg.mongodb.net/koen?retryWrites=true&w=majority"
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx := context.Background()
 	// defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(m.ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
+	m.ctx = ctx
+	m.client = client
 
 	// Ping the primary
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+	if err := m.client.Ping(m.ctx, readpref.Primary()); err != nil {
 		panic(err)
 	}
-	fmt.Println("Successfully connected and pinged.")
-
-	m.client = client
-	m.ctx = ctx
+	fmt.Println("Successfully connected and pinged MongoDB")
 
 }
 
@@ -92,7 +90,7 @@ func (m *MongoInstance) Read(query interface{}) (interface{}, error) {
 func HandleCreateUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &User{}
-		err := utils.DecodeJSON(w, r, user)
+		err := utils.DecodeJSON(w, r, user, false)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
@@ -111,11 +109,12 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 func HandleGetUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &User{}
-		err := utils.DecodeJSON(w, r, user)
+		err := utils.DecodeJSON(w, r, user, true)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
 		}
+		fmt.Println(user.Email)
 		// Pass in an identifier struct
 		result, err := db.Read(
 			struct {
@@ -123,8 +122,7 @@ func HandleGetUser(db DBConn) http.HandlerFunc {
 			}{Email: user.Email})
 		if err != nil {
 			fmt.Print(err)
-			http.NotFound(w, r)
-			// utils.Respond(http.StatusOK, `{Couldn't find user!").ServeHTTP(w, r)
+			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
 			return
 		}
 		fmt.Println(result)
