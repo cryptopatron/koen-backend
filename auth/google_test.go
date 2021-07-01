@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/cryptopatron/backend/utils"
+	"github.com/cryptopatron/koen-backend/utils"
 )
 
 func TestHandleGoogleAuth(t *testing.T) {

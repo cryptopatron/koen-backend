@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"bitbucket.org/cryptopatron/backend/auth"
-	"bitbucket.org/cryptopatron/backend/db"
-	"bitbucket.org/cryptopatron/backend/utils"
+	"github.com/cryptopatron/koen-backend/auth"
+	"github.com/cryptopatron/koen-backend/db"
+	"github.com/cryptopatron/koen-backend/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -26,6 +26,7 @@ func main() {
 	setupFileServer(router, *servePath)
 
 	// Connect to DB
+
 	var conn db.DBConn = &db.MongoInstance{Database: "koen", Collection: "users"}
 	conn.Open()
 	defer conn.Close()

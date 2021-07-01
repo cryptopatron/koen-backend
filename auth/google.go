@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/cryptopatron/backend/utils"
+	"github.com/cryptopatron/koen-backend/utils"
 	"github.com/dgrijalva/jwt-go"
 )
 

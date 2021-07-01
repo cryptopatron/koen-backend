@@ -1,4 +1,4 @@
-module bitbucket.org/cryptopatron/backend
+module github.com/cryptopatron/koen-backend
 
 go 1.16
 
