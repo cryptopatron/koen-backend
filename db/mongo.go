@@ -26,11 +26,11 @@ type MongoInstance struct {
 	Collection string
 }
 type User struct {
-	Email                   string `bson:"email"` // Used for identifying Google users
-	UserName                string `bson:"userName"`
-	ProfileName             string `bson:"profileName"`
-	AutoWalletPublicKey     string `bson:"autoWalletPublicKey"`
-	MetaMaskWalletPublicKey string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
+	Email                         string `bson:"email"` // Used for identifying Google users
+	Name                          string `bson:"name"`
+	PageName                      string `bson:"pageName"`
+	GeneratedMaticWalletPublicKey string `bson:"generatedMaticWalletPublicKey"`
+	MetaMaskWalletPublicKey       string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
 }
 
 func (m *MongoInstance) Open() {
@@ -125,8 +125,6 @@ func HandleGetUser(db DBConn) http.HandlerFunc {
 			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
 			return
 		}
-		fmt.Println(result)
-
-		utils.Respond(http.StatusOK, "")(w, r)
+		utils.RespondWithJSON(result, http.StatusOK)(w, r)
 	}
 }

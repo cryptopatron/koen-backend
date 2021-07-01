@@ -27,7 +27,7 @@ func main() {
 
 	// Connect to DB
 
-	var conn db.DBConn = &db.MongoInstance{Database: "koen", Collection: "users"}
+	var conn db.DBConn = &db.MongoInstance{Database: "koen_test", Collection: "users"}
 	conn.Open()
 	defer conn.Close()
 

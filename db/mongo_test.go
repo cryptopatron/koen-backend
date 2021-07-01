@@ -90,11 +90,11 @@ func TestCreateUserHandler(t *testing.T) {
 	t.Run("HTTP 200 on correctly matching JSON request", func(t *testing.T) {
 		// JSON which follow User key semantics in DB
 		var json string = `{
-			"profileName":"fakeasstoken",
-			"userName":"fakeasstoken",
+			"pageName":"fakeasstoken",
+			"name":"fakeasstoken",
 			"email":"fakeasstoken",
 			"metaMaskWalletPublicKey":"fakeasstoken",    
-			"autoWalletPublicKey": "kuhgihjygyuh"
+			"generatedMaticWalletPublicKey": "kuhgihjygyuh"
 			}`
 		body := strings.NewReader(json)
 		req, err := http.NewRequest("POST", "/test", body)

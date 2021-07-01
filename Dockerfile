@@ -5,12 +5,20 @@ WORKDIR /server
 RUN go test -v ./...
 RUN go build -o /go/bin/server
 
+FROM node:12.11 AS REACT_BUILD
+ADD https://api.github.com/repos/cryptopatron/web-app/git/refs/heads/master version.json
+RUN git clone https://github.com/cryptopatron/web-app.git /webapp
+RUN cp /webapp/package.json /tmp/
+RUN cd /tmp && npm install
+RUN cp -a /tmp/node_modules /webapp/
+
+WORKDIR /webapp
+RUN ls
+RUN npm run build
+
 
 FROM alpine:3.10
-RUN apk update && apk upgrade && \
-    apk add --no-cache git
 WORKDIR /app
-RUN git clone -b mvp-login https://prampey7@bitbucket.org/cryptopatron/front-end.git
+COPY --from=REACT_BUILD /webapp/build ./webapp/build
 COPY --from=GO_BUILD /go/bin/server ./
-RUN ls
-CMD ./server --servePath /app/front-end/dist/dropcoin/
+CMD ./server --servePath ./webapp/build
