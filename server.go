@@ -41,6 +41,16 @@ func main() {
 
 		})
 
+		// Public routes
+		router.Group(func(r chi.Router) {
+
+			r.Get("/users/pageName/{pageName}", func(w http.ResponseWriter, r *http.Request) {
+				if pageName := chi.URLParam(r, "pageName"); pageName != "" {
+					db.GetUser(conn, map[string]string{"pageName": pageName}).ServeHTTP(w, r)
+				}
+			})
+		})
+
 	})
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.

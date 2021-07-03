@@ -128,3 +128,15 @@ func HandleGetUser(db DBConn) http.HandlerFunc {
 		utils.RespondWithJSON(result, http.StatusOK)(w, r)
 	}
 }
+
+func GetUser(db DBConn, searchQuery interface{}) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := db.Read(searchQuery)
+		if err != nil {
+			fmt.Print(err)
+			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
+			return
+		}
+		utils.RespondWithJSON(result, http.StatusOK)(w, r)
+	}
+}
