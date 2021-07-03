@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -109,11 +109,6 @@ func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)
 			return
 		}
-		// if claims.Email != user.Email {
-		// 	respondWithError(w, 403, "Emails don't match")
-		// 	return
-		// }
-
 		// create a JWT for OUR app and give it back to the client for future requests
 		// Stateful token authentication
 		// tokenString, err := auth.MakeJWT(claims.Email, cfg.JWTSecret)
@@ -121,15 +116,8 @@ func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 		// 	respondWithError(w, 500, "Couldn't make authentication token")
 		// 	return
 		// }
-		userData, err := json.Marshal(claims)
-		if err != nil {
-			utils.Respond(http.StatusInternalServerError, "Could not encode JWT").ServeHTTP(w, r)
-			return
-		}
-		// Rewrite body to store user data
-		r.Body = ioutil.NopCloser(bytes.NewReader(userData))
-		// Handler func to handle request if JWT is succesfully validated
-		h(w, r)
+		ctx := context.WithValue(r.Context(), "userData", claims)
+		h(w, r.WithContext(ctx))
 	}
 
 }

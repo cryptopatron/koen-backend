@@ -2,10 +2,13 @@ package db
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/cryptopatron/koen-backend/auth"
 )
 
 func TestCreateUserHandler(t *testing.T) {
@@ -130,43 +133,31 @@ func TestHandleGetUser(t *testing.T) {
 
 	handler := HandleGetUser(conn)
 
-	t.Run("Find user even with just one field", func(t *testing.T) {
-		// Random fields which are dissimilar from the expected User creation fields
-		var json string = `{"email":"fakeasstoken"}`
-		body := strings.NewReader(json)
-		req, err := http.NewRequest("POST", "/test", body)
+	t.Run("HTTP 200 on finding user with known email", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/test", nil)
+		ctx := context.WithValue(req.Context(), "userData", auth.GoogleClaims{Email: "fakeasstoken"})
+		req = req.WithContext(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// TODO: Test to check if Content-Type is being checked for JSON
-		// req.Header.Set("Content-Type", "application/json")
-
+		// TODO: test for HEader status codes
 		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
 		rr := httptest.NewRecorder()
-
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
 		handler.ServeHTTP(rr, req)
 
 		got := rr.Code
 		want := http.StatusOK
 
 		if got != want {
+			t.Log(rr)
 			t.Errorf("got %v, want %v", got, want)
 		}
 	})
-	t.Run("Find user on fully correct JSON request", func(t *testing.T) {
-		// JSON which follow User key semantics in DB
-		var json string = `{
-			"profileName":"fakeasstoken",
-			"userName":"fakeasstoken",
-			"email":"fakeasstoken",
-			"metaMaskWalletPublicKey":"fakeasstoken",    
-			"autoWalletPublicKey": "kuhgihjygyuh"
-			}`
-		body := strings.NewReader(json)
-		req, err := http.NewRequest("POST", "/test", body)
+	t.Run("HTTP 404 on sending empty google claim", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/test", nil)
+		ctx := context.WithValue(req.Context(), "userData", auth.GoogleClaims{})
+		req = req.WithContext(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -182,7 +173,7 @@ func TestHandleGetUser(t *testing.T) {
 		handler.ServeHTTP(rr, req)
 
 		got := rr.Code
-		want := http.StatusOK
+		want := http.StatusNotFound
 
 		if got != want {
 			t.Log(rr)

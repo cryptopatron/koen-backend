@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cryptopatron/koen-backend/auth"
 	"github.com/cryptopatron/koen-backend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -108,18 +109,17 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 
 func HandleGetUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user := &User{}
-		err := utils.DecodeJSON(w, r, user, true)
-		if err != nil {
-			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
+		ctx := r.Context()
+		userData, ok := ctx.Value("userData").(auth.GoogleClaims)
+		if !ok {
+			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 			return
 		}
-		fmt.Println(user.Email)
 		// Pass in an identifier struct
 		result, err := db.Read(
 			struct {
 				Email string
-			}{Email: user.Email})
+			}{Email: userData.Email})
 		if err != nil {
 			fmt.Print(err)
 			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
