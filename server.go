@@ -33,7 +33,7 @@ func main() {
 	router.Route(API_PREFIX, func(r chi.Router) {
 
 		// Protected routes
-		router.Group(func(r chi.Router) {
+		r.Group(func(r chi.Router) {
 			// Setup auth middleware
 			r.Use(auth.HandleGoogleAuth)
 			r.Post("/users/create", db.HandleCreateUser(conn))
@@ -42,15 +42,11 @@ func main() {
 		})
 
 		// Public routes
-		router.Group(func(r chi.Router) {
-
-			r.Get("/users/pageName/{pageName}", func(w http.ResponseWriter, r *http.Request) {
-				if pageName := chi.URLParam(r, "pageName"); pageName != "" {
-					db.GetUser(conn, map[string]string{"pageName": pageName}).ServeHTTP(w, r)
-				}
-			})
+		r.Get("/users/pageName/{pageName}", func(w http.ResponseWriter, r *http.Request) {
+			if pageName := chi.URLParam(r, "pageName"); pageName != "" {
+				db.GetUser(conn, map[string]string{"pageName": pageName}).ServeHTTP(w, r)
+			}
 		})
-
 	})
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
