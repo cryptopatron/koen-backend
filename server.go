@@ -8,7 +8,6 @@ import (
 
 	"github.com/cryptopatron/koen-backend/auth"
 	"github.com/cryptopatron/koen-backend/db"
-	"github.com/cryptopatron/koen-backend/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -26,15 +25,23 @@ func main() {
 	setupFileServer(router, *servePath)
 
 	// Connect to DB
-
 	var conn db.DBConn = &db.MongoInstance{Database: "koen_test", Collection: "users"}
 	conn.Open()
 	defer conn.Close()
 
 	// Setup REST API endpoints
-	router.Post("/auth/google/jwt", auth.HandleGoogleAuth(utils.Respond(http.StatusOK, "")))
-	router.Post(API_PREFIX+"/google/users/create", auth.HandleGoogleAuth(db.HandleCreateUser(conn)))
-	router.Post(API_PREFIX+"/google/users/get", auth.HandleGoogleAuth(db.HandleGetUser(conn)))
+	router.Route(API_PREFIX, func(r chi.Router) {
+
+		// Protected routes
+		router.Group(func(r chi.Router) {
+			// Setup auth middleware
+			r.Use(auth.HandleGoogleAuth)
+			r.Post("/users/create", db.HandleCreateUser(conn))
+			r.Post("/google/users/get", db.HandleGetUser(conn))
+
+		})
+
+	})
 
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
 	fmt.Println("Running GO backend on port 8008")

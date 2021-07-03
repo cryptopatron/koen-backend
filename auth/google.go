@@ -87,9 +87,9 @@ func getGooglePublicKey(keyID string) (string, error) {
 	return key, nil
 }
 
-func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
+func HandleGoogleAuth(next http.Handler) http.Handler {
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// parse the GoogleJWT that was POSTed from the front-end
 		type GoogleJWT struct {
 			// Make sure field name starts with capital letter
@@ -117,7 +117,7 @@ func HandleGoogleAuth(h http.HandlerFunc) http.HandlerFunc {
 		// 	return
 		// }
 		ctx := context.WithValue(r.Context(), "userData", claims)
-		h(w, r.WithContext(ctx))
-	}
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 
 }
