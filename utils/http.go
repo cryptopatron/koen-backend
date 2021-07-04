@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -42,6 +43,7 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, schema interface{}, allo
 
 	err := decoder.Decode(&schema)
 	if err != nil {
+		log.Fatal(err)
 		return errors.New("couldn't decode JSON")
 	}
 
