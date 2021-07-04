@@ -131,7 +131,7 @@ func HandleGetUser(db DBConn) http.HandlerFunc {
 			}{Email: userData.Email})
 		if err != nil {
 			fmt.Print(err)
-			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
+			utils.RespondWithJSON(struct{}{}, http.StatusOK).ServeHTTP(w, r)
 			return
 		}
 		utils.RespondWithJSON(result, http.StatusOK)(w, r)

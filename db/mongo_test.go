@@ -70,7 +70,7 @@ func TestCreateUserHandler(t *testing.T) {
 			"pageName":"fakeasstoken",
 			"idToken":"bleh",
 			"random": "random",
-			"metaMaskWalletPublicKey":"fakeasstoken",    
+			"metaMaskWalletPublicKey":"",    
 			"generatedMaticWalletPublicKey": "kuhgihjygyuh"
 			}`
 		body := strings.NewReader(json)
