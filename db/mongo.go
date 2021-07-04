@@ -97,6 +97,16 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 			return
 		}
 
+		ctx := r.Context()
+		userData, ok := ctx.Value("userData").(auth.GoogleClaims)
+		if !ok {
+			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
+			return
+		}
+
+		user.Name = userData.FirstName + " " + userData.LastName
+		user.Email = userData.Email
+
 		_, err = db.Create(user)
 		if err != nil {
 			utils.Respond(http.StatusInternalServerError, "Couldn't create new user!").ServeHTTP(w, r)

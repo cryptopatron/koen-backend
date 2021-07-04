@@ -90,7 +90,7 @@ func TestCreateUserHandler(t *testing.T) {
 			t.Errorf("got %v, want %v", got, want)
 		}
 	})
-	t.Run("HTTP 200 on correctly matching JSON request", func(t *testing.T) {
+	t.Run("HTTP 200 on correctly matching JSON structure", func(t *testing.T) {
 		// JSON which follow User key semantics in DB
 		var json string = `{
 			"pageName":"fakeasstoken",
@@ -101,6 +101,11 @@ func TestCreateUserHandler(t *testing.T) {
 			}`
 		body := strings.NewReader(json)
 		req, err := http.NewRequest("POST", "/test", body)
+		ctx := context.WithValue(req.Context(), "userData",
+			auth.GoogleClaims{
+				Email: "test@koen.com", FirstName: "Koen", LastName: "San",
+			})
+		req = req.WithContext(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
