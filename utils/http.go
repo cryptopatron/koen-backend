@@ -43,7 +43,8 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, schema interface{}, allo
 
 	err := decoder.Decode(&schema)
 	if err != nil {
-		log.Fatal(err)
+		log.Print("Decode error")
+		log.Print(err)
 		return errors.New("couldn't decode JSON")
 	}
 

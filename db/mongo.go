@@ -112,8 +112,7 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 			utils.Respond(http.StatusInternalServerError, "Couldn't create new user!").ServeHTTP(w, r)
 			return
 		}
-
-		utils.Respond(http.StatusOK, "")(w, r)
+		utils.RespondWithJSON(user, http.StatusOK)(w, r)
 	}
 }
 
@@ -144,7 +143,7 @@ func GetUser(db DBConn, searchQuery interface{}) http.HandlerFunc {
 		result, err := db.Read(searchQuery)
 		if err != nil {
 			fmt.Print(err)
-			utils.Respond(http.StatusNotFound, "User does not exist").ServeHTTP(w, r)
+			utils.RespondWithJSON(struct{}{}, http.StatusOK).ServeHTTP(w, r)
 			return
 		}
 		utils.RespondWithJSON(result, http.StatusOK)(w, r)
