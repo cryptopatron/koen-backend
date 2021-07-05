@@ -106,6 +106,7 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 		// Validate the JWT
 		claims, err := ValidateGoogleJWT(jwt.IdToken)
 		if err != nil {
+			fmt.Println(err)
 			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)
 			return
 		}
