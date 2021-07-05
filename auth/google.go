@@ -94,7 +94,7 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 		type GoogleJWT struct {
 			// Make sure field name starts with capital letter
 			// This makes sure its exported and visible to the JSON Decoder
-			IdToken string
+			IdToken string `json:"idToken"`
 		}
 		jwt := &GoogleJWT{}
 		err := utils.DecodeJSON(w, r, jwt, true)

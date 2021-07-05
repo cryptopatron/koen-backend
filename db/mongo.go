@@ -27,11 +27,11 @@ type MongoInstance struct {
 	Collection string
 }
 type User struct {
-	Email                         string `bson:"email"` // Used for identifying Google users
-	Name                          string `bson:"name"`
-	PageName                      string `bson:"pageName"`
-	GeneratedMaticWalletPublicKey string `bson:"generatedMaticWalletPublicKey"`
-	MetaMaskWalletPublicKey       string `bson:"metaMaskWalletPublicKey` // Used for identifying MetaMask users
+	Email                         string `bson:"email" json:"email"` // Used for identifying Google users
+	Name                          string `bson:"name" json:"name"`
+	PageName                      string `bson:"pageName" json:"pageName"`
+	GeneratedMaticWalletPublicKey string `bson:"generatedMaticWalletPublicKey" json:"generatedMaticWalletPublicKey"`
+	MetaMaskWalletPublicKey       string `bson:"metaMaskWalletPublicKey json:"metaMaskWalletPublicKey"` // Used for identifying MetaMask users
 }
 
 func (m *MongoInstance) Open() {

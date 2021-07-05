@@ -67,11 +67,13 @@ func TestCreateUserHandler(t *testing.T) {
 	t.Run("HTTP 200 on partially correct JSON fields", func(t *testing.T) {
 		// JSON which follow User key semantics but with some random fields
 		var json string = `{
-			"pageName":"fakeasstoken",
-			"idToken":"bleh",
+			"pageName": "fakeasstoken",
+			"idToken": "bleh",
 			"random": "random",
 			"metaMaskWalletPublicKey":"",    
-			"generatedMaticWalletPublicKey": "kuhgihjygyuh"
+			"generatedMaticWalletPublicKey": "kuhgihjygyuh",
+			"random4": "random",
+			"story": "of my life"
 			}`
 		body := strings.NewReader(json)
 		req, err := http.NewRequest("POST", "/test", body)
