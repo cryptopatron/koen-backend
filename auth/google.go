@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -96,8 +97,16 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 			// This makes sure its exported and visible to the JSON Decoder
 			IdToken string `json:"idToken"`
 		}
+		//Keep a copy of request body
+		reqBody, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			utils.Respond(http.StatusInternalServerError, err.Error()).ServeHTTP(w, r)
+		}
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody))
+
 		jwt := &GoogleJWT{}
-		err := utils.DecodeJSON(w, r, jwt, true)
+		err = utils.DecodeJSON(w, r, jwt, true)
+		fmt.Println("jwt", jwt)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
@@ -118,6 +127,8 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 		// 	return
 		// }
 		ctx := context.WithValue(r.Context(), "userData", claims)
+		// Reuse opy of request body
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 
