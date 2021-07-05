@@ -97,6 +97,11 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 			// This makes sure its exported and visible to the JSON Decoder
 			IdToken string `json:"idToken"`
 		}
+
+		if r.Body == nil {
+			utils.Respond(http.StatusBadRequest, "EMopty body").ServeHTTP(w, r)
+			return
+		}
 		//Keep a copy of request body
 		reqBody, err := ioutil.ReadAll(r.Body)
 		if err != nil {
