@@ -91,7 +91,7 @@ func (m *MongoInstance) Read(query interface{}) (interface{}, error) {
 func HandleCreateUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &User{}
-		err := utils.DecodeJSON(w, r, user, true)
+		err := utils.DecodeJSON(r.Body, user, true)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return

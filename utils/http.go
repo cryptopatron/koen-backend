@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 )
@@ -30,13 +31,13 @@ func RespondWithJSON(data interface{}, statusCode int) http.HandlerFunc {
 	}
 }
 
-func DecodeJSON(w http.ResponseWriter, r *http.Request, schema interface{}, allowUnknownFields bool) error {
+func DecodeJSON(body io.Reader, schema interface{}, allowUnknownFields bool) error {
 
-	if r.Body == nil {
+	if body == nil {
 		return errors.New("body cannot be empty")
 	}
 
-	decoder := json.NewDecoder(r.Body)
+	decoder := json.NewDecoder(body)
 	if !allowUnknownFields {
 		decoder.DisallowUnknownFields()
 	}
