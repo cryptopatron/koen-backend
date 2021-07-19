@@ -11,9 +11,10 @@ RUN go test -v ./...
 RUN go build -o /go/bin/server
 
 
-FROM node:12.11 AS REACT_BUILD
-ADD https://api.github.com/repos/cryptopatron/web-app/git/refs/heads/master version.json
-RUN git clone https://github.com/cryptopatron/web-app.git /webapp
+FROM node:14.15.3 AS REACT_BUILD
+RUN curl -u prampey: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 https://api.github.com/repos/cryptopatron/web-app/git/refs/heads/master > ./version.json
+ADD ./version.json .
+RUN git clone -b master https://prampey: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@github.com/cryptopatron/web-app.git /webapp
 RUN cp /webapp/package.json /tmp/
 RUN cd /tmp && npm install
 RUN cp -a /tmp/node_modules /webapp/
