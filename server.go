@@ -31,12 +31,16 @@ func main() {
 
 	// Setup REST API endpoints
 	router.Route(API_PREFIX, func(r chi.Router) {
+		r.Post("/auth/metamask", auth.HandleMetaMaskAuthentication())
 
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			// Setup auth middleware
 			r.Use(auth.HandleGoogleAuth)
+			// Does not depend on auth mode
 			r.Post("/users/create", db.HandleCreateUser(conn))
+
+			// This depends on JWT context field: Email
 			r.Post("/google/users/get", db.HandleGetUser(conn))
 
 		})
