@@ -89,18 +89,18 @@ func getGooglePublicKey(keyID string) (string, error) {
 }
 
 // Middleware
-func HandleGoogleAuth(next http.Handler) http.Handler {
+func HandleJWT(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// parse the GoogleJWT that was POSTed from the front-end
-		type GoogleJWT struct {
+		type JWT struct {
 			// Make sure field name starts with capital letter
 			// This makes sure its exported and visible to the JSON Decoder
 			IdToken string `json:"idToken"`
 		}
 
 		if r.Body == nil {
-			utils.Respond(http.StatusBadRequest, "EMopty body").ServeHTTP(w, r)
+			utils.Respond(http.StatusBadRequest, "Empty body").ServeHTTP(w, r)
 			return
 		}
 		//Read request body into a copy buffer
@@ -109,7 +109,7 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 			utils.Respond(http.StatusInternalServerError, err.Error()).ServeHTTP(w, r)
 		}
 
-		jwt := &GoogleJWT{}
+		jwt := &JWT{}
 		// Passing in copy of request body to decode
 		err = utils.DecodeJSON(bytes.NewReader(copyBuf), jwt, true)
 		fmt.Println("jwt", jwt)
@@ -120,6 +120,7 @@ func HandleGoogleAuth(next http.Handler) http.Handler {
 
 		// Validate the JWT
 		claims, err := ValidateGoogleJWT(jwt.IdToken)
+		// Validate Metamask JWT too here
 		if err != nil {
 			fmt.Println(err)
 			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)

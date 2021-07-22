@@ -12,8 +12,8 @@ RUN go build -o /go/bin/server
 
 
 FROM node:14.15.3 AS REACT_BUILD
-RUN curl -u prampey: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 https://api.github.com/repos/cryptopatron/web-app/git/refs/heads/master > /tmp/version.json
-RUN git clone -b master https://prampey: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@github.com/cryptopatron/web-app.git /webapp
+RUN curl -u ${CRED} https://api.github.com/repos/cryptopatron/web-app/git/refs/heads/master > /tmp/version.json
+RUN git clone -b master https://${CRED}@github.com/cryptopatron/web-app.git /webapp
 RUN cp /webapp/package.json /tmp/
 RUN cd /tmp && npm install && npm install yarn && yarn
 RUN cp -a /tmp/node_modules /webapp/

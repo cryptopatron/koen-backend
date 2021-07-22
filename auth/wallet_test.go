@@ -37,9 +37,9 @@ func TestVerifySignature(t *testing.T) {
 
 	t.Run("True match on a valid payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:                   NONCE,
-			Signature:               signature,
-			MetaMaskWalletPublicKey: publicKeyString,
+			Nonce:           NONCE,
+			Signature:       signature,
+			WalletPublicKey: publicKeyString,
 		}
 
 		got, _ := verifySignature(payload)
@@ -52,9 +52,9 @@ func TestVerifySignature(t *testing.T) {
 
 	t.Run("False match on an invalid payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:                   NONCE,
-			Signature:               "bleh",
-			MetaMaskWalletPublicKey: publicKeyString,
+			Nonce:           NONCE,
+			Signature:       "bleh",
+			walletPublicKey: publicKeyString,
 		}
 
 		got, _ := verifySignature(payload)
@@ -67,9 +67,9 @@ func TestVerifySignature(t *testing.T) {
 
 	t.Run("False match on an empty payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:                   "",
-			Signature:               "",
-			MetaMaskWalletPublicKey: "",
+			Nonce:           "",
+			Signature:       "",
+			walletPublicKey: "",
 		}
 
 		got, _ := verifySignature(payload)

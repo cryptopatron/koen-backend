@@ -6,5 +6,7 @@ services:
         build:
           context: .
           dockerfile: Dockerfile
+        environment:
+          CRED: ${USER}:${TOKEN}
         ports:
             - 8008:8008
