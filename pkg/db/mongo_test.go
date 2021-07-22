@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cryptopatron/koen-backend/auth"
+	"github.com/cryptopatron/koen-backend/pkg/auth"
 )
 
 func TestCreateUserHandler(t *testing.T) {

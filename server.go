@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cryptopatron/koen-backend/auth"
-	"github.com/cryptopatron/koen-backend/db"
+	"github.com/cryptopatron/koen-backend/pkg/auth"
+	"github.com/cryptopatron/koen-backend/pkg/db"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )

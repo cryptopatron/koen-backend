@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cryptopatron/koen-backend/auth"
-	"github.com/cryptopatron/koen-backend/utils"
+	"github.com/cryptopatron/koen-backend/pkg/auth"
+	"github.com/cryptopatron/koen-backend/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

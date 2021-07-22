@@ -7,7 +7,7 @@ RUN go mod download
 RUN ls
 # Copy and run code. This is a fast step anyhow.
 COPY . .
-RUN go test -v ./...
+RUN go test -v ./pkg/...
 RUN go build -o /go/bin/server
 
 
