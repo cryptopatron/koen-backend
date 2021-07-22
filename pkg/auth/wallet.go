@@ -23,7 +23,7 @@ type Payload struct {
 
 // Create a struct that will be encoded to a JWT.
 // We add jwt.StandardClaims as an embedded type, to provide fields like expiry time
-type Claims struct {
+type WalletClaims struct {
 	WalletPublicKey string `json:"walletPublicKey"`
 	jwt.StandardClaims
 }
@@ -55,7 +55,7 @@ func verifySignature(payload Payload) (bool, error) {
 	return match, nil
 }
 
-func createJWT(c Claims) (string, error) {
+func createJWT(c WalletClaims) (string, error) {
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	// Create the JWT string
@@ -120,7 +120,7 @@ func HandleWalletAuthentication() http.HandlerFunc {
 		// Declare the expiration time of the token
 		expirationTime := time.Now().Add(50 * time.Minute)
 		// Create the JWT claims, which includes the username and expiry time
-		claims := &Claims{
+		claims := &WalletClaims{
 			WalletPublicKey: payload.WalletPublicKey,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds

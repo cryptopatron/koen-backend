@@ -10,7 +10,7 @@ import (
 	"github.com/cryptopatron/koen-backend/pkg/utils"
 )
 
-func TestHandleGoogleAuth(t *testing.T) {
+func TestHandleJWT(t *testing.T) {
 	handler := HandleJWT(utils.Respond(http.StatusOK, ""))
 
 	t.Run("Bad request on empty request body", func(t *testing.T) {
