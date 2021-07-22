@@ -11,7 +11,7 @@ import (
 )
 
 func TestHandleGoogleAuth(t *testing.T) {
-	handler := HandleGoogleAuth(utils.Respond(http.StatusOK, ""))
+	handler := HandleJWT(utils.Respond(http.StatusOK, ""))
 
 	t.Run("Bad request on empty request body", func(t *testing.T) {
 		// Create a HTTP request with no JWT

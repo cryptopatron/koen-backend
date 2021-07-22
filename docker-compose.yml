@@ -1,12 +1,12 @@
 version: "3.7"
 
 services:
-    go-server:
-        image: backend-dev
-        build:
-          context: .
-          dockerfile: Dockerfile
-        environment:
-          CRED: ${USER}:${TOKEN}
-        ports:
-            - 8008:8008
+  go-server:
+    image: backend-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GITHUB_CRED: ${GITHUB_USER}:${GITHUB_TOKEN}
+    ports:
+      - 8008:8008

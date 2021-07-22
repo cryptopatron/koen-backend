@@ -54,7 +54,7 @@ func TestVerifySignature(t *testing.T) {
 		payload := Payload{
 			Nonce:           NONCE,
 			Signature:       "bleh",
-			walletPublicKey: publicKeyString,
+			WalletPublicKey: publicKeyString,
 		}
 
 		got, _ := verifySignature(payload)
@@ -69,7 +69,7 @@ func TestVerifySignature(t *testing.T) {
 		payload := Payload{
 			Nonce:           "",
 			Signature:       "",
-			walletPublicKey: "",
+			WalletPublicKey: "",
 		}
 
 		got, _ := verifySignature(payload)
