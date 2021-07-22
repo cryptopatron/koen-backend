@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -17,8 +18,19 @@ type JWT struct {
 }
 
 type Claims struct {
-	GoogleClaims
 	WalletClaims
+	GoogleClaims
+}
+
+func (c *Claims) ValidateJWT(token string) error {
+	errW := c.WalletClaims.ValidateJWT(token)
+	errG := c.GoogleClaims.ValidateJWT(token)
+	// If atleast one of them passed
+	// JWT is legit
+	if errW != nil && errG != nil {
+		return errors.New("Invalid JWT!")
+	}
+	return nil
 }
 
 // Middleware
@@ -45,12 +57,9 @@ func HandleJWT(next http.Handler) http.Handler {
 			return
 		}
 
-		// claims, err := Claims{}.validateJWT(jwt)
-
 		// Validate the JWT
-		claims := &GoogleClaims{}
+		claims := &Claims{}
 		err = claims.ValidateJWT(jwt.IdToken)
-		// Validate Metamask JWT too here
 		if err != nil {
 			fmt.Println(err)
 			utils.Respond(http.StatusUnauthorized, "Invalid google auth").ServeHTTP(w, r)

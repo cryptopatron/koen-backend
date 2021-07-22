@@ -98,6 +98,7 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
+		// TODO: Switch to Generic claims
 		userData, ok := ctx.Value("userData").(auth.GoogleClaims)
 		if !ok {
 			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
@@ -106,6 +107,7 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 
 		user.Name = userData.FirstName + " " + userData.LastName
 		user.Email = userData.Email
+		// TODO: Add wallet public key here
 
 		_, err = db.Create(user)
 		if err != nil {
@@ -124,6 +126,7 @@ func HandleGetUser(db DBConn) http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 			return
 		}
+		// TODO: Get user either by Email or public wallet key
 		// Pass in an identifier struct
 		result, err := db.Read(
 			struct {
