@@ -2,6 +2,8 @@ package auth
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,6 +11,36 @@ import (
 
 	"github.com/cryptopatron/koen-backend/pkg/utils"
 )
+
+func generateTestJWT() (JWT, error) {
+	payload := generateTestPayload("Hello hash")
+	// Payload to json string
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return JWT{}, err
+	}
+
+	req, err := http.NewRequest("POST", "/test", bytes.NewReader(body))
+	if err != nil {
+		return JWT{}, err
+	}
+
+	// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
+	rr := httptest.NewRecorder()
+
+	// handler satisfies the interface of http.Handler
+	// So we can use its ServeHTTP to serve the rquest to it
+	HandleWalletAuthentication().ServeHTTP(rr, req)
+
+	// Buffer to JSON
+	jwt := &JWT{}
+	err = utils.DecodeJSON(rr.Body, jwt, false)
+	if err != nil {
+		return JWT{}, err
+	}
+	fmt.Print("JWT", jwt)
+	return *jwt, nil
+}
 
 func TestHandleJWT(t *testing.T) {
 	handler := HandleJWT(utils.Respond(http.StatusOK, ""))
@@ -85,36 +117,42 @@ func TestHandleJWT(t *testing.T) {
 		}
 	})
 
-	// t.Run("HTTP 200 on correct JWT but random JSON fields", func(t *testing.T) {
+	t.Run("HTTP 200 on valid Wallet-based JWT", func(t *testing.T) {
+		// Create a new JWT
+		jwt, err := generateTestJWT()
+		if err != nil {
+			t.Error(err)
+		}
 
-	// 	var jwt string = `{
-	// 		"pageName": "divs",
-	// 		"idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImI2ZjhkNTVkYTUzNGVhOTFjYjJjYjAwZTFhZjRlOGUwY2RlY2E5M2QiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiMTE2ODUyNDkyNTM1LTM3bjczOXM3MzJ1aTcxaGtmbTE5bjVyM2FndjZnOWM1LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiMTE2ODUyNDkyNTM1LTM3bjczOXM3MzJ1aTcxaGtmbTE5bjVyM2FndjZnOWM1LmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTA0NTM0MjY4MjEyMTk4MzA1MzkwIiwiZW1haWwiOiJkaXZnMjM5NUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiYXRfaGFzaCI6IjYtSkVaZmozanp4ZHFRbU5Hd2RSWkEiLCJuYW1lIjoiZGl2IGd1cHRhIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FBVFhBSndjN2JHUjRMNk5nMGNEY1QyTUx0WjZwaEpyNFRSWVZ5SnFFaW9XPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6ImRpdiIsImZhbWlseV9uYW1lIjoiZ3VwdGEiLCJsb2NhbGUiOiJlbiIsImlhdCI6MTYyNTQ4MTMzMywiZXhwIjoxNjI1NDg0OTMzLCJqdGkiOiI4ZTFmMjI1ZTdmNmI3MzVhYmIyZmFlODk3YmY5NmQxMWQ0MDA0YzBhIn0.2ZSf6sOP5gljwfzRQqdzJEiFw_uTX9C0QLT9Dpgm2M7ptAFGhnPdw2aVlyJ2VxFaG4QM-IzrF235g7zPvVHYjUqe9DMq5OVDnXAnTda0yGyfJBoqKsAnJn1663jo9fv1pKNyPxbHkELNlaZF83Dhd_Q4JHA8yvRnAtbOJCe2kgDgaFkdfOzx1eF4Hat50GWAx_rtJfDnyG6o5i4ntM8QiAr-n8b-tdkMMNuAE1Sukcfiv34V6rvQOfHIEhdVyHS8ohBpecJDcFFhBHFxvnPMeeA4X2JYJosquHZ2AkAKKyGQrs5fdWXt-JCC38XLUdOz3be7_iSJUKwhRkuSjiWQZg",
-	// 		"random": "random",
-	// 		"metaMaskWalletPublicKey": "",
-	// 		"generatedMaticWalletPublicKey": "kuhgihjygyuh"
-	// 	}`
-	// 	body := strings.NewReader(jwt)
-	// 	req, err := http.NewRequest("POST", "/test", body)
-	// 	if err != nil {
-	// 		t.Fatal(err)
-	// 	}
+		var body string = fmt.Sprintf(`{
+				"idToken": "%s",
+				"random": "random",
+				"metaMaskWalletPublicKey": "",
+				"generatedMaticWalletPublicKey": "kuhgihjygyuh"
+			}`, jwt.IdToken)
 
-	// 	// TODO: Test to check if Content-Type is being checked for JSON
-	// 	// req.Header.Set("Content-Type", "application/json")
+		req, err := http.NewRequest("POST", "/test", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	// 	// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-	// 	rr := httptest.NewRecorder()
+		// TODO: Test to check if Content-Type is being checked for JSON
+		// req.Header.Set("Content-Type", "application/json")
 
-	// 	// handler satisfies the interface of http.Handler
-	// 	// So we can use its ServeHTTP to serve the rquest to it
-	// 	handler.ServeHTTP(rr, req)
+		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
+		rr := httptest.NewRecorder()
 
-	// 	got := rr.Code
-	// 	want := http.StatusOK
+		// handler satisfies the interface of http.Handler
+		// So we can use its ServeHTTP to serve the rquest to it
+		handler.ServeHTTP(rr, req)
 
-	// 	if got != want {
-	// 		t.Errorf("got %v, want %v", got, want)
-	// 	}
-	// })
+		got := rr.Code
+		want := http.StatusOK
+
+		if got != want {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+
+	// TODOL HTTP 200 on Google-based JWT
 }

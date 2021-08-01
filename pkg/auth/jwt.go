@@ -51,7 +51,6 @@ func HandleJWT(next http.Handler) http.Handler {
 		jwt := &JWT{}
 		// Passing in copy of request body to decode
 		err = utils.DecodeJSON(bytes.NewReader(copyBuf), jwt, true)
-		fmt.Println("jwt", jwt)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return

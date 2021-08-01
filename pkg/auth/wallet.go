@@ -83,7 +83,7 @@ func (wc *WalletClaims) ValidateJWT(tokenString string) error {
 		return errors.New("Invalid JWT!")
 	}
 
-	println("Welcome %s", wc.WalletPublicKey)
+	fmt.Printf("Wallet %s has been validated!", wc.WalletPublicKey)
 	return nil
 }
 
@@ -94,7 +94,6 @@ func HandleWalletAuthentication() http.HandlerFunc {
 
 		payload := &Payload{}
 		err := utils.DecodeJSON(r.Body, payload, true)
-		fmt.Println("Payload", payload)
 		if err != nil {
 			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
 			return
