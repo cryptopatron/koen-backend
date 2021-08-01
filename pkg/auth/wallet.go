@@ -17,21 +17,21 @@ import (
 const jwtKey = "my_secret_key"
 
 type Payload struct {
-	Nonce           string `json:"nonce"`
-	Signature       string `json:"signature"`
-	WalletPublicKey string `json:"walletPublicKey"`
+	Nonce               string `json:"nonce"`
+	Signature           string `json:"signature"`
+	WalletPublicAddress string `json:"walletPublicAddress"`
 }
 
 // Create a struct that will be encoded to a JWT.
 // We add jwt.StandardClaims as an embedded type, to provide fields like expiry time
 type WalletClaims struct {
-	WalletPublicKey string `json:"walletPublicKey"`
+	WalletPublicAddress string `json:"walletPublicKey"`
 	jwt.StandardClaims
 }
 
 func verifySignature(payload Payload) (bool, error) {
 
-	publicKeyBytes, err := hexutil.Decode(payload.WalletPublicKey)
+	publicKeyBytes, err := hexutil.Decode(payload.WalletPublicAddress)
 	if err != nil {
 		fmt.Print(err)
 		return false, err
@@ -46,12 +46,12 @@ func verifySignature(payload Payload) (bool, error) {
 		return false, err
 	}
 
-	sigPublicKey, err := crypto.Ecrecover(hash.Bytes(), signature)
+	sigPublicKey, err := crypto.SigToPub(hash.Bytes(), signature)
 	if err != nil {
 		return false, err
 	}
-
-	match := bytes.Equal(sigPublicKey, publicKeyBytes)
+	sigPublicAddr := crypto.PubkeyToAddress(*sigPublicKey)
+	match := bytes.Equal(sigPublicAddr.Bytes(), publicKeyBytes)
 
 	return match, nil
 }
@@ -83,7 +83,7 @@ func (wc *WalletClaims) ValidateJWT(tokenString string) error {
 		return errors.New("Invalid JWT!")
 	}
 
-	fmt.Printf("Wallet %s has been validated!", wc.WalletPublicKey)
+	fmt.Printf("Wallet %s has been validated!", wc.WalletPublicAddress)
 	return nil
 }
 
@@ -115,7 +115,7 @@ func HandleWalletAuthentication() http.HandlerFunc {
 		expirationTime := time.Now().Add(50 * time.Minute)
 		// Create the JWT claims, which includes the username and expiry time
 		claims := &WalletClaims{
-			WalletPublicKey: payload.WalletPublicKey,
+			WalletPublicAddress: payload.WalletPublicAddress,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),

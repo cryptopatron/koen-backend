@@ -25,8 +25,7 @@ func generateTestPayload(nonce string) Payload {
 	if !ok {
 		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
 	}
-	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	// publicAddress := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	publicAddress := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
 
 	data := []byte(nonce)
 	hash := crypto.Keccak256Hash(data)
@@ -37,9 +36,9 @@ func generateTestPayload(nonce string) Payload {
 	}
 
 	return Payload{
-		Nonce:           nonce,
-		Signature:       hexutil.Encode(signatureBytes),
-		WalletPublicKey: hexutil.Encode(publicKeyBytes),
+		Nonce:               nonce,
+		Signature:           hexutil.Encode(signatureBytes),
+		WalletPublicAddress: publicAddress,
 	}
 
 }
@@ -72,9 +71,9 @@ func TestVerifySignature(t *testing.T) {
 
 	t.Run("False match on an empty payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:           "",
-			Signature:       "",
-			WalletPublicKey: "",
+			Nonce:               "",
+			Signature:           "",
+			WalletPublicAddress: "",
 		}
 
 		got, _ := verifySignature(payload)
@@ -118,9 +117,9 @@ func TestHandleWalletAuthentication(t *testing.T) {
 
 	t.Run("HTTP 400 on random payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:           "NONCE",
-			Signature:       "0xsignature",
-			WalletPublicKey: "0xpublicKeyString",
+			Nonce:               "NONCE",
+			Signature:           "0xsignature",
+			WalletPublicAddress: "0xpublicKeyString",
 		}
 		// Payload to json string
 		body, err := json.Marshal(payload)
