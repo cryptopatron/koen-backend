@@ -60,7 +60,7 @@ func createJWT(c WalletClaims) (string, error) {
 	// Declare the token with the algorithm used for signing, and the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	// Create the JWT string
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString([]byte(jwtKey))
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +104,8 @@ func HandleWalletAuthentication() http.HandlerFunc {
 		result, err := verifySignature(*payload)
 		if err != nil {
 			fmt.Println(err)
-			// Bad request here!
+			utils.Respond(http.StatusBadRequest, err.Error()).ServeHTTP(w, r)
+			return
 		}
 
 		if !result {
@@ -123,6 +124,7 @@ func HandleWalletAuthentication() http.HandlerFunc {
 		}
 		jwt, err := createJWT(*claims)
 		if err != nil {
+			fmt.Println(err)
 			utils.Respond(http.StatusInternalServerError, "Something went wrong").ServeHTTP(w, r)
 			return
 		}

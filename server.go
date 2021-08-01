@@ -29,6 +29,7 @@ func main() {
 	conn.Open()
 	defer conn.Close()
 
+	// TODO: Write tests for server endpoints
 	// Setup REST API endpoints
 	router.Route(API_PREFIX, func(r chi.Router) {
 		r.Post("/auth/wallet", auth.HandleWalletAuthentication())
