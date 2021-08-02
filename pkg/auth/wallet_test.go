@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -28,12 +29,15 @@ func generateTestPayload(nonce string) Payload {
 	publicAddress := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
 
 	data := []byte(nonce)
-	hash := crypto.Keccak256Hash(data)
-
-	signatureBytes, err := crypto.Sign(hash.Bytes(), privateKey)
+	// Prefix an ethereum-specific message and then hash
+	hash := signHash(data)
+	signatureBytes, err := crypto.Sign(hash, privateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Need to add 27 to recovery identifier for legacy reasons
+	signatureBytes[64] += 27
+	fmt.Println("sign", hexutil.Encode(signatureBytes))
 
 	return Payload{
 		Nonce:               nonce,
@@ -45,7 +49,7 @@ func generateTestPayload(nonce string) Payload {
 
 func TestVerifySignature(t *testing.T) {
 
-	t.Run("True match on a valid payload", func(t *testing.T) {
+	t.Run("True match on a generated valid payload", func(t *testing.T) {
 		payload := generateTestPayload("Hello hash")
 
 		got, _ := verifySignature(payload)
@@ -69,15 +73,18 @@ func TestVerifySignature(t *testing.T) {
 		}
 	})
 
-	t.Run("False match on an empty payload", func(t *testing.T) {
+	t.Run("True match on a sample valid payload", func(t *testing.T) {
 		payload := Payload{
-			Nonce:               "",
-			Signature:           "",
-			WalletPublicAddress: "",
+			Nonce:               "1627895001092",
+			Signature:           "0xa2c97a7b4cd30a32c348c39449f4ece757513a8f6790a9a70e19b2359ba9b89b16e0b1f74bb21135f594a93215b797afe6de03fd1656aad2a0ed69e1fa4fea2a1c",
+			WalletPublicAddress: "0xc2fde45f9e0a77005493930f72819fcf70210464",
 		}
 
-		got, _ := verifySignature(payload)
-		want := false
+		got, err := verifySignature(payload)
+		if err != nil {
+			t.Error(err)
+		}
+		want := true
 
 		if got != want {
 			t.Errorf("got %t, want %t", got, want)

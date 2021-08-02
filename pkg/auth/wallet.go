@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/cryptopatron/koen-backend/pkg/utils"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -29,31 +29,42 @@ type WalletClaims struct {
 	jwt.StandardClaims
 }
 
+// web3js prefixes a message to its messages before hashing them
+// So we're doing the same
+func signHash(data []byte) []byte {
+	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+	return crypto.Keccak256([]byte(msg))
+}
+
 func verifySignature(payload Payload) (bool, error) {
 
-	publicKeyBytes, err := hexutil.Decode(payload.WalletPublicAddress)
-	if err != nil {
-		fmt.Print(err)
-		return false, err
-	}
+	publicAddr := common.HexToAddress(payload.WalletPublicAddress)
 
-	// Generate hash of Nonce
 	data := []byte(payload.Nonce)
-	hash := crypto.Keccak256Hash(data)
 
-	signature, err := hexutil.Decode(payload.Signature)
+	sig, err := hexutil.Decode(payload.Signature)
 	if err != nil {
 		return false, err
 	}
 
-	sigPublicKey, err := crypto.SigToPub(hash.Bytes(), signature)
+	// Last byte of signature is the recovery ID (recid)
+	// It has 2 possible values: 0,1; each will result in a different public address
+	// web3js adds 27 to recid in its signatures
+	// We are checking and removing it here
+	if sig[64] != 27 && sig[64] != 28 {
+		return false, errors.New("Not a valid signature. 'v' value should be 27/28")
+	}
+	sig[64] -= 27
+
+	pubKey, err := crypto.SigToPub(signHash(data), sig)
 	if err != nil {
 		return false, err
 	}
-	sigPublicAddr := crypto.PubkeyToAddress(*sigPublicKey)
-	match := bytes.Equal(sigPublicAddr.Bytes(), publicKeyBytes)
 
-	return match, nil
+	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+	fmt.Println("Public", recoveredAddr.Hex())
+
+	return publicAddr == recoveredAddr, nil
 }
 
 func createJWT(c WalletClaims) (string, error) {
