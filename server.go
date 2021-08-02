@@ -38,12 +38,8 @@ func main() {
 		r.Group(func(r chi.Router) {
 			// Setup auth middleware
 			r.Use(auth.HandleJWT)
-			// Does not depend on auth mode
 			r.Post("/users/create", db.HandleCreateUser(conn))
-
-			// This depends on JWT context field: Email
-			r.Post("/google/users/get", db.HandleGetUser(conn))
-
+			r.Post("/users/get", db.HandleGetUser(conn))
 		})
 
 		// Public routes

@@ -152,9 +152,11 @@ func TestHandleGetUser(t *testing.T) {
 
 	handler := HandleGetUser(conn)
 
-	t.Run("HTTP 200 on finding user with known email", func(t *testing.T) {
+	t.Run("HTTP 200 on getting user with GoogleClaims email", func(t *testing.T) {
 		req, err := http.NewRequest("POST", "/test", nil)
-		ctx := context.WithValue(req.Context(), "userData", auth.GoogleClaims{Email: "fakeasstoken"})
+		ctx := context.WithValue(req.Context(), "userData", auth.Claims{
+			GoogleClaims: auth.GoogleClaims{Email: "fakeasstoken"},
+		})
 		req = req.WithContext(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -172,11 +174,12 @@ func TestHandleGetUser(t *testing.T) {
 			t.Log(rr)
 			t.Errorf("got %v, want %v", got, want)
 		}
+		// TODO: Also check body for user details
 	})
 	// Need to test better
 	t.Run("HTTP 200 / Empty response on sending empty google claim", func(t *testing.T) {
 		req, err := http.NewRequest("POST", "/test", nil)
-		ctx := context.WithValue(req.Context(), "userData", auth.GoogleClaims{})
+		ctx := context.WithValue(req.Context(), "userData", auth.Claims{})
 		req = req.WithContext(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -199,5 +202,30 @@ func TestHandleGetUser(t *testing.T) {
 			t.Log(rr)
 			t.Errorf("got %v, want %v", got, want)
 		}
+	})
+	t.Run("HTTP 200 on getting user with WalletClaims key", func(t *testing.T) {
+		req, err := http.NewRequest("POST", "/test", nil)
+		ctx := context.WithValue(req.Context(), "userData", auth.Claims{
+			WalletClaims: auth.WalletClaims{WalletPublicAddress: "fakeasstoken"},
+		})
+		req = req.WithContext(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// TODO: test for HEader status codes
+		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+
+		got := rr.Code
+		want := http.StatusOK
+
+		if got != want {
+			t.Log(rr)
+			t.Errorf("got %v, want %v", got, want)
+		}
+		// TODO: Also check body for user details
+		t.Log(rr.Body)
 	})
 }

@@ -27,11 +27,11 @@ type MongoInstance struct {
 	Collection string
 }
 type User struct {
-	Email                         string `bson:"email" json:"email"` // Used for identifying Google users
-	Name                          string `bson:"name" json:"name"`
-	PageName                      string `bson:"pageName" json:"pageName"`
-	GeneratedMaticWalletPublicKey string `bson:"generatedMaticWalletPublicKey" json:"generatedMaticWalletPublicKey"`
-	MetaMaskWalletPublicKey       string `bson:"metaMaskWalletPublicKey json:"metaMaskWalletPublicKey"` // Used for identifying MetaMask users
+	Email                             string `bson:"email" json:"email"` // Used for identifying Google users
+	Name                              string `bson:"name" json:"name"`
+	PageName                          string `bson:"pageName" json:"pageName"`
+	GeneratedMaticWalletPublicAddress string `bson:"generatedMaticWalletPublicAddress" json:"generatedMaticWalletPublicAddress"`
+	MetaMaskWalletPublicAddress       string `bson:"metaMaskWalletPublicAddress json:"metaMaskWalletPublicAddress"` // Used for identifying MetaMask users
 }
 
 func (m *MongoInstance) Open() {
@@ -121,17 +121,21 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 func HandleGetUser(db DBConn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		userData, ok := ctx.Value("userData").(auth.GoogleClaims)
+		userData, ok := ctx.Value("userData").(auth.Claims)
 		if !ok {
 			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 			return
 		}
-		// TODO: Get user either by Email or public wallet key
+		// Get user either by Email or public wallet key
+		query := make(map[string]string)
+		if userData.Email != "" {
+			query["email"] = userData.Email
+		} else {
+			query["metaMaskWalletPublicAddress"] = userData.WalletPublicAddress
+		}
+
 		// Pass in an identifier struct
-		result, err := db.Read(
-			struct {
-				Email string
-			}{Email: userData.Email})
+		result, err := db.Read(query)
 		if err != nil {
 			fmt.Print(err)
 			utils.RespondWithJSON(struct{}{}, http.StatusOK).ServeHTTP(w, r)
