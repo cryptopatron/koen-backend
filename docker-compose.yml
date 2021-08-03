@@ -8,5 +8,6 @@ services:
       dockerfile: Dockerfile
       args:
         GITHUB_CRED: ${GITHUB_USER}:${GITHUB_TOKEN}
+        BRANCH: ${BRANCH}
     ports:
       - 8008:8008

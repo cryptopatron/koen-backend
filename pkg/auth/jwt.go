@@ -66,7 +66,7 @@ func HandleJWT(next http.Handler) http.Handler {
 		}
 
 		// Create user data context from validated JWT claims
-		ctx := context.WithValue(r.Context(), "userData", claims)
+		ctx := context.WithValue(r.Context(), "userData", *claims)
 		// Regenerate request body from copyBuffer
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(copyBuf))
 		// Pass request with regenerated body and user data context to next HTTP Handler
