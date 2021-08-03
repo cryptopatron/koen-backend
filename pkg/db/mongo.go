@@ -31,7 +31,7 @@ type User struct {
 	Name                              string `bson:"name" json:"name"`
 	PageName                          string `bson:"pageName" json:"pageName"`
 	GeneratedMaticWalletPublicAddress string `bson:"generatedMaticWalletPublicAddress" json:"generatedMaticWalletPublicAddress"`
-	MetaMaskWalletPublicAddress       string `bson:"metaMaskWalletPublicAddress json:"metaMaskWalletPublicAddress"` // Used for identifying MetaMask users
+	MetaMaskWalletPublicAddress       string `bson:"metaMaskWalletPublicAddress" json:"metaMaskWalletPublicAddress"` // Used for identifying MetaMask users
 }
 
 func (m *MongoInstance) Open() {

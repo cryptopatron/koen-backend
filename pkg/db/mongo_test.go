@@ -49,12 +49,17 @@ func TestCreateUserHandler(t *testing.T) {
 		"pageName":"fakeasstoken",
 		"name":"fakeasstoken",
 		"email":"fakeasstoken",
-		"metaMaskWalletPublicKey":"fakeasstoken",    
-		"generatedMaticWalletPublicKey": "kuhgihjygyuh"
+		"generatedMaticWalletPublicAddress": "kuhgihjygyuh"
 		}`
 	htc.SetRequestBody(strings.NewReader(correctJson))
 	htc.SetContext("userData", claim)
 	t.Run("HTTP 200 on correctly matching JSON", htc.CheckReturnStatus(http.StatusOK))
+
+	htc.SetRequestBody(strings.NewReader(correctJson))
+	htc.SetContext("userData", auth.Claims{
+		WalletClaims: auth.WalletClaims{WalletPublicAddress: "fakeasstoken"},
+	})
+	t.Run("HTTP 200 with WalletClaims in userData", htc.CheckReturnStatus(http.StatusOK))
 }
 
 func TestHandleGetUser(t *testing.T) {
