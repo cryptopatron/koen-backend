@@ -99,22 +99,25 @@ func HandleCreateUser(db DBConn) http.HandlerFunc {
 
 		ctx := r.Context()
 		// TODO: Switch to Generic claims
-		userData, ok := ctx.Value("userData").(auth.GoogleClaims)
+		userData, ok := ctx.Value("userData").(auth.Claims)
 		if !ok {
 			http.Error(w, http.StatusText(http.StatusUnprocessableEntity), http.StatusUnprocessableEntity)
 			return
 		}
 
-		user.Name = userData.FirstName + " " + userData.LastName
-		user.Email = userData.Email
-		// TODO: Add wallet public key here
+		if userData.Email != "" {
+			user.Name = userData.FirstName + " " + userData.LastName
+			user.Email = userData.Email
+		} else {
+			user.MetaMaskWalletPublicAddress = userData.WalletPublicAddress
+		}
 
 		_, err = db.Create(user)
 		if err != nil {
 			utils.Respond(http.StatusInternalServerError, "Couldn't create new user!").ServeHTTP(w, r)
 			return
 		}
-		utils.RespondWithJSON(user, http.StatusOK)(w, r)
+		utils.RespondWithJSON(*user, http.StatusOK)(w, r)
 	}
 }
 

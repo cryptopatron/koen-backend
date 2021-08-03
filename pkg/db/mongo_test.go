@@ -2,13 +2,12 @@ package db
 
 import (
 	"bytes"
-	"context"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/cryptopatron/koen-backend/pkg/auth"
+	"github.com/cryptopatron/koen-backend/pkg/utils"
 )
 
 func TestCreateUserHandler(t *testing.T) {
@@ -17,131 +16,45 @@ func TestCreateUserHandler(t *testing.T) {
 	conn.Open()
 	defer conn.Close()
 
-	handler := HandleCreateUser(conn)
+	htc := &utils.HttpTestCase{
+		Handler: HandleCreateUser(conn),
+	}
 
-	t.Run("Bad request on empty request body", func(t *testing.T) {
-		// Create a HTTP request with no JWT
-		req, err := http.NewRequest("POST", "/user/create", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+	htc.SetRequestBody(nil)
+	t.Run("HTTP 400 on empty request body", htc.CheckReturnStatus(http.StatusBadRequest))
 
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
+	htc.SetRequestBody(bytes.NewBuffer([]byte("bleh")))
+	t.Run("HTTP 400 on random request body", htc.CheckReturnStatus(http.StatusBadRequest))
 
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
-		handler.ServeHTTP(rr, req)
+	// JSON which follow User key semantics but with some random fields
+	var extraJson string = `{
+		"pageName": "fakeasstoken",
+		"idToken": "bleh",
+		"random": "random",
+		"metaMaskWalletPublicKey":"",    
+		"generatedMaticWalletPublicKey": "kuhgihjygyuh",
+		"random4": "random",
+		"story": "of my life"
+		}`
+	htc.SetRequestBody(strings.NewReader(extraJson))
+	claim := auth.Claims{
+		GoogleClaims: auth.GoogleClaims{
+			Email: "test@koen.com", FirstName: "Koen", LastName: "San",
+		},
+	}
+	htc.SetContext("userData", claim)
+	t.Run("HTTP 200 on correct JSON with extra fields", htc.CheckReturnStatus(http.StatusOK))
 
-		got := rr.Code
-		want := http.StatusBadRequest
-
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
-	})
-
-	t.Run("HTTP 400 on random JSON request body", func(t *testing.T) {
-		// Create a HTTP request with no JWT
-		body := bytes.NewBuffer([]byte("bleh"))
-		req, err := http.NewRequest("POST", "/user/create", body)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusBadRequest
-
-		if got != want {
-			t.Errorf("got %v, want %v", got, want)
-		}
-	})
-
-	t.Run("HTTP 200 on partially correct JSON fields", func(t *testing.T) {
-		// JSON which follow User key semantics but with some random fields
-		var json string = `{
-			"pageName": "fakeasstoken",
-			"idToken": "bleh",
-			"random": "random",
-			"metaMaskWalletPublicKey":"",    
-			"generatedMaticWalletPublicKey": "kuhgihjygyuh",
-			"random4": "random",
-			"story": "of my life"
-			}`
-		body := strings.NewReader(json)
-		req, err := http.NewRequest("POST", "/test", body)
-		ctx := context.WithValue(req.Context(), "userData",
-			auth.GoogleClaims{
-				Email: "test@koen.com", FirstName: "Koen", LastName: "San",
-			})
-		req = req.WithContext(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// TODO: Test to check if Content-Type is being checked for JSON
-		// req.Header.Set("Content-Type", "application/json")
-
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusOK
-
-		if got != want {
-			t.Log(rr)
-			t.Errorf("got %v, want %v", got, want)
-		}
-	})
-	t.Run("HTTP 200 on correctly matching JSON structure", func(t *testing.T) {
-		// JSON which follow User key semantics in DB
-		var json string = `{
-			"pageName":"fakeasstoken",
-			"name":"fakeasstoken",
-			"email":"fakeasstoken",
-			"metaMaskWalletPublicKey":"fakeasstoken",    
-			"generatedMaticWalletPublicKey": "kuhgihjygyuh"
-			}`
-		body := strings.NewReader(json)
-		req, err := http.NewRequest("POST", "/test", body)
-		ctx := context.WithValue(req.Context(), "userData",
-			auth.GoogleClaims{
-				Email: "test@koen.com", FirstName: "Koen", LastName: "San",
-			})
-		req = req.WithContext(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// TODO: Test to check if Content-Type is being checked for JSON
-		// req.Header.Set("Content-Type", "application/json")
-
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusOK
-
-		if got != want {
-			t.Log(rr)
-			t.Errorf("got %v, want %v", got, want)
-		}
-	})
+	var correctJson string = `{
+		"pageName":"fakeasstoken",
+		"name":"fakeasstoken",
+		"email":"fakeasstoken",
+		"metaMaskWalletPublicKey":"fakeasstoken",    
+		"generatedMaticWalletPublicKey": "kuhgihjygyuh"
+		}`
+	htc.SetRequestBody(strings.NewReader(correctJson))
+	htc.SetContext("userData", claim)
+	t.Run("HTTP 200 on correctly matching JSON", htc.CheckReturnStatus(http.StatusOK))
 }
 
 func TestHandleGetUser(t *testing.T) {
@@ -150,82 +63,25 @@ func TestHandleGetUser(t *testing.T) {
 	conn.Open()
 	defer conn.Close()
 
-	handler := HandleGetUser(conn)
+	htc := &utils.HttpTestCase{
+		Handler: HandleGetUser(conn),
+	}
 
-	t.Run("HTTP 200 on getting user with GoogleClaims email", func(t *testing.T) {
-		req, err := http.NewRequest("POST", "/test", nil)
-		ctx := context.WithValue(req.Context(), "userData", auth.Claims{
-			GoogleClaims: auth.GoogleClaims{Email: "fakeasstoken"},
-		})
-		req = req.WithContext(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// TODO: test for HEader status codes
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusOK
-
-		if got != want {
-			t.Log(rr)
-			t.Errorf("got %v, want %v", got, want)
-		}
-		// TODO: Also check body for user details
+	htc.SetRequestBody(nil)
+	htc.SetContext("userData", auth.Claims{
+		GoogleClaims: auth.GoogleClaims{Email: "fakeasstoken"},
 	})
+	t.Run("HTTP 200 on getting user with GoogleClaims email", htc.CheckReturnStatus(http.StatusOK))
+	// TODO: Also check body for user details
+
 	// Need to test better
-	t.Run("HTTP 200 / Empty response on sending empty google claim", func(t *testing.T) {
-		req, err := http.NewRequest("POST", "/test", nil)
-		ctx := context.WithValue(req.Context(), "userData", auth.Claims{})
-		req = req.WithContext(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
+	htc.SetRequestBody(nil)
+	htc.SetContext("userData", auth.Claims{})
+	t.Run("HTTP 200 / Empty response on sending empty google claim", htc.CheckReturnStatus(http.StatusOK))
 
-		// TODO: Test to check if Content-Type is being checked for JSON
-		// req.Header.Set("Content-Type", "application/json")
-
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-
-		// handler satisfies the interface of http.Handler
-		// So we can use its ServeHTTP to serve the rquest to it
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusOK
-
-		if got != want {
-			t.Log(rr)
-			t.Errorf("got %v, want %v", got, want)
-		}
+	htc.SetRequestBody(nil)
+	htc.SetContext("userData", auth.Claims{
+		WalletClaims: auth.WalletClaims{WalletPublicAddress: "fakeasstoken"},
 	})
-	t.Run("HTTP 200 on getting user with WalletClaims key", func(t *testing.T) {
-		req, err := http.NewRequest("POST", "/test", nil)
-		ctx := context.WithValue(req.Context(), "userData", auth.Claims{
-			WalletClaims: auth.WalletClaims{WalletPublicAddress: "fakeasstoken"},
-		})
-		req = req.WithContext(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// TODO: test for HEader status codes
-		// Create a ResponseRecorder which satisifies the interface of http.ResponseWriter
-		rr := httptest.NewRecorder()
-		handler.ServeHTTP(rr, req)
-
-		got := rr.Code
-		want := http.StatusOK
-
-		if got != want {
-			t.Log(rr)
-			t.Errorf("got %v, want %v", got, want)
-		}
-		// TODO: Also check body for user details
-		t.Log(rr.Body)
-	})
+	t.Run("HTTP 200 on getting user with WalletClaims key", htc.CheckReturnStatus(http.StatusOK))
 }
