@@ -14,24 +14,9 @@ import (
 
 const API_PREFIX = "/api/v1"
 
-func main() {
-	servePath := flag.String("servePath", "../front-end/dist/dropcoin/", "Path to serve static files from")
-	flag.Parse()
+func setupRoutes(conn db.DBConn) (fn func(r chi.Router)) {
+	return func(r chi.Router) {
 
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-
-	// Setup file serving from web app
-	setupFileServer(router, *servePath)
-
-	// Connect to DB
-	var conn db.DBConn = &db.MongoInstance{Database: "koen_test", Collection: "users"}
-	conn.Open()
-	defer conn.Close()
-
-	// TODO: Write tests for server endpoints
-	// Setup REST API endpoints
-	router.Route(API_PREFIX, func(r chi.Router) {
 		r.Post("/auth/wallet", auth.HandleWalletAuthentication())
 
 		// Protected routes
@@ -48,11 +33,40 @@ func main() {
 				db.GetUser(conn, map[string]string{"pageName": pageName}).ServeHTTP(w, r)
 			}
 		})
-	})
+	}
+}
 
+func main() {
+	servePath := flag.String("servePath", "../front-end/dist/dropcoin/", "Path to serve static files from")
+	flag.Parse()
+
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+
+	// Setup file serving from web app
+	setupFileServer(router, *servePath)
+
+	ver := os.Getenv("VERSION")
+	dbName := "koen"
+	if ver == "" || ver == "test" {
+		dbName = "koen_test"
+	}
+
+	// Connect to DB
+	var conn db.DBConn = &db.MongoInstance{Database: dbName, Collection: "users"}
+	conn.Open()
+	defer conn.Close()
+
+	// TODO: Write tests for server endpoints
+	// Setup REST API endpoints
+	router.Route(API_PREFIX, setupRoutes(conn))
 	// Our application will run on port 8080. Here we declare the port and pass in our router.
-	fmt.Println("Running GO backend on port 8008")
-	http.ListenAndServe(":8008", router)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8008"
+	}
+	http.ListenAndServe(":"+port, router)
+	fmt.Printf("Running GO backend on port %s", port)
 }
 
 // Original source: https://github.com/go-chi/chi/issues/403

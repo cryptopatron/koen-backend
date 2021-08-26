@@ -2,13 +2,13 @@ version: "3.7"
 
 services:
   koen-app:
-    image: gcr.io/resonant-fiber-308411/koen-app:test
+    image: gcr.io/resonant-fiber-308411/koen-app:${VERSION}
     build:
       context: .
       dockerfile: Dockerfile
       args:
         GITHUB_CRED: ${GITHUB_USER}:${GITHUB_TOKEN}
         BRANCH: ${BRANCH}
-        VERSION: test
+        VERSION: ${VERSION}
     ports:
       - 8008:8008
